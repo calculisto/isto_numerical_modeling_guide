@@ -1,0 +1,689 @@
+\documentclass[a4paper]{article}
+\usepackage[T1]{fontenc}
+
+% Remove a warning from the ctable package
+\usepackage{silence}
+\WarningFilter{ctable}{Transparency disabled:}
+
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{minted}
+\usepackage{siunitx}
+\usepackage{physics}
+\usepackage{bm}
+\usepackage{tikz}
+\usepackage[version=4]{mhchem}
+\usepackage{ctable}
+\usepackage{csquotes}
+\usepackage{lmodern,textcomp}
+\usepackage{xurl}
+\usepackage{parskip}
+
+\setminted{breaklines}
+
+% Use siunitx \qty macro and silence the warning
+\AtBeginDocument{\RenewCommandCopy\qty\SI}
+\ExplSyntaxOn
+\msg_redirect_name:nnn{siunitx}{physics-pkg}{none}
+\ExplSyntaxOff
+
+\title{Advices for students who intend to do numerical modelling at ISTO}
+\author{Emmanuel Le Trong}
+% This is by default
+% \date{\today}
+
+\newenvironment{mintedexample}%
+ {\VerbatimEnvironment
+  \begin{minted}}%
+ {\end{minted}}
+
+\newcommand{\Average}[1]{\left<#1\right>}
+\newcommand{\IntrinsicAverage}[2]{\left<#1\right>^{#2}}
+
+\newcommand{\Time}{t}
+\newcommand{\Density}{\rho}
+\newcommand{\Velocity}{\bm{u}}
+\newcommand{\Pressure}{p}
+\newcommand{\DeviatoricStress}{\bm{\tau}}
+\newcommand{\Gravity}{\bm{g}}
+
+\usepackage{relsize,xspace}
+\newcommand{\Rplus}{\protect\hspace{-.1em}\protect\raisebox{.35ex}{\smaller{\smaller\textbf{+}}}}
+\newcommand{\Cpp}{\mbox{C\Rplus\Rplus}\xspace}
+\newcommand{\OF}{\texttt{OpenFOAM}\xspace}
+\newcommand{\PF}{\texttt{Porous4FOAM}\xspace}
+\newcommand{\GIT}{\texttt{git}\xspace}
+\newcommand{\GH}{\texttt{GitHub}\xspace}
+\newcommand{\TODO}{\textcolor{red}{\textsf{\textbf{TODO:}}}\xspace}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Using the \LaTeX{} typesetting system}
+
+You should write your papers using the \LaTeX system. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Some useful \LaTeX\ packages}
+
+Here is a list of packages that will simplify the production of quality material.
+
+\begin{itemize}
+    \item \texttt{physics} (\url{https://ctan.org/pkg/physics}). 
+    It brings a lot of useful macros for vector operations like gradient and
+    divergence, mathematical functions, partial or total derivatives, matrices,
+    etc. My favorite: instead of 
+    \begin{minted}{latex}
+        \frac{\partial^2 f}{\partial x^2}
+    \end{minted}
+    I can write
+    \begin{minted}{latex}
+        \pdv[2]{f}{x}
+    \end{minted}
+    which is far easier to read.
+    It automatically loads the \texttt{amsmath} package. 
+    (Which you should always use anyway.)
+
+    \item \texttt{bm} (\url{https://ctan.org/pkg/bm}).
+    To get symbols in boldface, in particular Greek letters. The
+    \texttt{physics} package provides the \mintinline{latex}{\vb} macro to do
+    that but depending on the font you use it might not be "bold enough" or even
+    not bold at all. Note that the \texttt{bm} package produces slanted bold
+    Latin letters while \mintinline{latex}{\mathbf} and \mintinline{latex}{\vb}
+    from the \texttt{physics} package produce upright characters. Thus
+    \begin{minted}{latex}
+    \begin{equation}
+        u \mathbf{u} \vb{u} \bm {u}.
+    \end{equation}
+    \end{minted}
+    gives
+    \begin{equation}
+        u \mathbf{u} \vb{u} \bm {u}.
+    \end{equation}
+
+    \item \texttt{siunitx} (\url{https://ctan.org/pkg/siunitx}).
+    To correctly typeset quantities with physical units. E.g.
+    \begin{minted}{latex}
+    \qty{18.015e-3}{\kilogram\per\mole}
+    \end{minted}
+    gives \qty{18.015e-3}{\kilogram\per\mole}.
+
+    Caveat: Both \texttt{physics} and \texttt{siunitx} define the macro 
+    \mintinline{latex}{\qty} to do different things. I find the later more 
+    useful. In order to use it without fuss, that I put
+    \begin{minted}[gobble=4]{latex}
+        % Use siunitx \qty macro and silence the warning
+        \AtBeginDocument{\RenewCommandCopy\qty\SI}
+        \ExplSyntaxOn
+        \msg_redirect_name:nnn{siunitx}{physics-pkg}{none}
+        \ExplSyntaxOff
+    \end{minted}
+    in the preamble of my document. The functionality of the \texttt{physics}
+    version of the macro is still available under the name 
+    \mintinline{latex}{\quantity}, if you need it.
+
+    \item \texttt{minted} (\url{https://ctan.org/pkg/minted}).
+    To include source code in your document. E.g. this \LaTeX\ snippet
+    \begin{mintedexample}{latex}
+    \begin{minted}[linenos,frame=lines]{cpp}
+    #include <iostream>
+    int main ()
+    {
+        // The simplest program
+        std::cout << "Hello world\n";
+    }
+    \end{minted}
+    \end{mintedexample}
+    renders like so
+    \begin{minted}[linenos,frame=lines,gobble=4]{cpp}
+        #include <iostream>
+        int main ()
+        {
+            // The simplest program
+            std::cout << "Hello world\n";
+        }
+    \end{minted}
+
+    \item \texttt{mhchem} (\url{https://ctan.org/pkg/mhchem}).
+    To typeset chemical formulas and reactions. E.g.
+    \begin{minted}{latex}
+        \ce{H2O -> OH- + H+}
+    \end{minted}
+    gives \ce{H2O -> OH- + H+}
+
+    \item \texttt{tikz} (\url{https://ctan.org/pkg/tikz}).
+    To produce drawings. For example, this ball
+    \tikz \shade[ball color=red] (1ex,1ex) circle (1ex);
+    is obtained with this command
+    \begin{minted}[gobble=4]{latex}
+        \tikz \shade[ball color=red] (1ex,1ex) circle (1ex);
+    \end{minted}
+    It can do a \emph{lot} (the manual has 1321 pages) but it requires learning
+    a new language.
+
+    \item \texttt{ctable} (\url{https://ctan.org/pkg/ctables}).
+    To produce what some call "professional-looking" tables. It uses the
+    \texttt{booktabs} (\url{https://ctan.org/pkg/booktabs}) package whose 
+    documentation is worth reading. For example, this
+    \begin{minted}[gobble=4]{latex}
+        \ctable[
+          caption=The price of things,pos=h,label=table1
+        ]{lS@{\ \ }l}{}{
+            \FL
+            Product & {Price (€)} &
+            \ML
+            Item 1 & 22.00 &
+            \NN
+            Item 2 & 5.25 &
+            \LL
+        }
+    \end{minted}
+    produces the table~\ref{table1}.
+    \ctable[
+      caption=The price of things,pos=h,label=table1
+    ]{lS@{\ \ }l}{}{
+        \FL
+        Product & {Price (€)} &
+        \ML
+        Item 1 & 22.00 &
+        \NN
+        Item 2 & 5.25 &
+        \LL
+    }
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Some tips when writing \LaTeX}
+(Those are \emph{tips}, not \emph{rules}.)
+\begin{itemize}
+
+    \item We are in Europe, use A4 paper: add the option \texttt{a4paper} to 
+    the document class, e.g.
+    \begin{minted}[gobble=4]{latex}
+        \documentclass[a4paper]{article}
+    \end{minted}
+
+    \item Equations are part of the text and as such must obey the rules of 
+        grammar, especially punctuation.
+        In practice this means that when needed, an equation shall be followed
+        by a comma or a dot (when it is at the end of a sentence).
+
+    \item Mathematical constants (e.g. the base of the natural logarithm
+        $\mathrm{e}$ or the imaginary unit $\mathrm{i}$) shall be typeset in
+        roman (upright) font. So shall mathematical functions like $\cos$,
+        $\sin$, $\ln$, etc. (These are available as macros in \texttt{amsmath}:
+        \mintinline{latex}{\cos}, \mintinline{latex}{\sin},
+        \mintinline{latex}{\ln}, etc.) Subscripts and superscripts that refer to
+        words (as opposed to variables) shall also be typeset in roman. For
+        example the velocity $\bm{u}$ in the solid phase should be noted
+        $\bm{u}_\text{s}$ instead of $\bm{u}_s$. The way to typeset in roman
+        font inside math mode is via the \mintinline{latex}{\text} macro. The
+        velocity above was produced by this snippet 
+        \mintinline{latex}{\bm{u}_\text{s}}.
+
+    \item Use \LaTeX\ macros to make your equations more readable. If you are
+    going to do a lot of volume averaging, you should define some operators
+    in the preamble of your document, such as
+    \begin{minted}[gobble=4]{latex}
+        \newcommand{\Average}[1]{\left<#1\right>}
+        \newcommand{\IntrinsicAverage}[2]{\left<#1\right>^{#2}}
+    \end{minted}
+    which can be used in the body of the document as such
+    \begin{minted}[gobble=4]{latex}
+        \begin{equation}
+        \Average{\Psi_\beta} =
+        \varepsilon_\beta\IntrinsicAverage{\Psi_\beta,\beta}.
+        \end{equation}
+    \end{minted}
+    and yields
+    \begin{equation}
+        \Average{\Psi_\beta} =
+    \varepsilon_\beta\IntrinsicAverage{\Psi_\beta}{\beta}\negthickspace .
+    \end{equation}
+    (Notice the dot at the end of the equation.)
+
+    \item Use \LaTeX\ macros even more. I personally grant every quantity I use 
+    a meaningful name by defining a macro. To render the Navier-Stokes equation,
+    I would define these in the preamble
+    \begin{minted}[gobble=4]{latex}
+        \newcommand{\Time}{t}
+        \newcommand{\Density}{\rho}
+        \newcommand{\Velocity}{\bm{u}}
+        \newcommand{\Pressure}{p}
+        \newcommand{\DeviatoricStress}{\bm{\tau}}
+        \newcommand{\Gravity}{\bm{g}}
+    \end{minted}
+    and then write somewhere in the body of the document
+    \begin{minted}[gobble=4]{latex}
+        \begin{equation}
+            \pdv{\Time}\left(\Density\Velocity\right) 
+          + \div{\left(\Density\Velocity\Velocity\right)} 
+          = 
+          - \grad{\Pressure} 
+          + \div{\DeviatoricStress} 
+          + \Density\Gravity.
+        \end{equation}
+    \end{minted}
+    which gives
+    \begin{equation}
+          \pdv{\Time}\left(\Density\Velocity\right) 
+        + \div{\left(\Density\Velocity\Velocity\right)} 
+        = 
+        - \grad{\Pressure} 
+        + \div{\DeviatoricStress} 
+        + \Density\Gravity.
+    \end{equation}
+
+    It might appear tedious at first but will prove life-saving later if, e.g., 
+    you mix physics, chemistry and thermodynamics in your document, when 
+    inevitable naming clashes appear.
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Working with \OF and \PF}
+
+\OF is the computational fluid dynamics software we use at ISTO.
+
+\PF is a package for \OF dealing with reactive transport in porous media. 
+It is developed at ISTO.
+
+If you intend to use \OF, you need to know \OF.
+Read at least the user guide \url{https://doc.cfd.direct/openfoam/user-guide}.
+We also have books, get in touch.
+
+If you intend to contribute to \PF you need to know \Cpp. We have books, 
+get in touch with me if you need one.
+You also need to know \GIT: read the book \textquote{ProGit} available here
+\url{https://git-scm.com/book/en/v2}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Installing \OF}
+We are going to download and compile \OF. We will clone the
+development source tree of \texttt{OpenFOAM.org} to get the full commit
+history of the project. It is a valuable source of information.
+From this source tree, we will select the version we want (here the 13)
+and compile it.
+\begin{enumerate}
+    \item Change directory to where you want to install OpenFOAM (here we create
+        a new sub-directory \OF in the home directory).
+\begin{minted}{shell}
+$ mkdir OpenFOAM
+$ cd OpenFOAM
+\end{minted}
+    \item Download the development source tree.
+\begin{minted}{shell}
+$ git clone https://github.com/OpenFOAM/OpenFOAM-dev.git
+$ git clone https://github.com/OpenFOAM/ThirdParty-dev.git            
+\end{minted}
+    \item Rename the directories, in order to keep several different version
+        each in its own directory and checkout the source for the chosen 
+        version and compile.
+\begin{minted}{shell}
+$ mv OpenFOAM-dev OpenFOAM-13
+$ mv ThirdParty-dev ThirdParty-13
+$ cd OpenFOAM-13
+$ git checkout version-13
+\end{minted}
+    \item Open the file \texttt{etc/bashrc} with your favorite text editor and
+        change the line containing
+\begin{minted}{shell}
+export WM_PROJECT_VERSION=dev
+\end{minted}
+    to
+\begin{minted}{shell}
+export WM_PROJECT_VERSION=13
+\end{minted}
+    (It should be around line 36.)
+    \item Initialize \OF and launch the compilation.
+\begin{minted}{shell}
+$ source etc/bashrc
+$ ./Allwmake -j
+\end{minted}
+    \item Wait, the compilation might take up to several hours, 
+        depending on your hardware.
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Using \OF}
+
+To be able to use any particular version (here again, the 13$^\text{th}$) of 
+\OF you have installed on your machine, you need to initialize it
+with
+\begin{minted}{shell}
+$ source $HOME/OpenFOAM/OpenFOAM-13/etc/bashrc
+\end{minted}
+(You might get an error involving \texttt{dirname}, ignore it.)
+You can avoid typing this command each time you open a terminal by putting it
+into your \mintinline{shell}{$HOME/.bashrc} file.
+
+The next step is to create your working directory and switch to it
+\begin{minted}{shell}
+$ mkdir -p $FOAM_RUN
+$ cd $FOAM_RUN
+\end{minted}
+(The last command as a shorter alias: \mintinline{shell}{run}.)
+
+From there you should be able to run some tutorials as explained in the user
+guide \url{https://doc.cfd.direct/openfoam/user-guide}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Exploring \OF source code}
+
+After initializing \OF, go to the source directory
+\begin{minted}{shell}
+$ source $HOME/OpenFOAM/OpenFOAM-13/etc/bashrc
+$ cd $FOAM_SRC
+\end{minted}
+(The last command as a shorter alias: \mintinline{shell}{src}.)
+
+From there you have access to the full commit log, down to the year 2014
+\begin{minted}{shell}
+$ git log
+\end{minted}
+The commit messages can be an invaluable source of documentation, with
+informations nowhere else to be found. As an example, check this commit message
+\begin{minted}{shell}
+$ git log -1 968e60
+\end{minted}
+or this one
+\begin{minted}{shell}
+$ git log -1 65ef2c
+\end{minted}
+or this one about a recent functionality you might not be aware of
+\begin{minted}{shell}
+$ git log -1 476bb42b
+\end{minted}
+
+If you are interested in a particular file, you can list only the commits that
+modified it. Let's go to the location of the file of interest
+\begin{minted}{shell}
+$ cd $FOAM_APP/modules/multiphaseEuler
+\end{minted}
+List the commits that modified a specific file
+\begin{minted}{shell}
+$ git log momentumPredictor.C
+\end{minted}
+or parts of that file, given by a line range
+\begin{minted}{shell}
+$ git log -L 48,58:momentumPredictor.C
+\end{minted}
+or just a function in that file
+\begin{minted}{shell}
+$ git log -L :prePredictor:multiphaseEuler.C
+\end{minted}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Using \PF}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Contributing to \PF}
+
+There are at the moment two versions of \PF: the legacy one, written essentially
+by Cyprien Soulaine, and the new one which is an on-going rewrite from scratch.
+
+The repositories for \PF are hosted (for now) on \GH. The legacy one is here 
+\url{https://github.com/csoulain/porousMedia4Foam} and the new one is here
+\url{https://github.com/calculisto/porousMedia4Foam}. (Beware, they have the
+same name! If you want to use both, you need to clone them in different
+directories.)
+
+If you want to contribute the \PF here is a summary of the steps to follow
+\begin{enumerate}
+    \item Fork the project on \GH if you have have a \GH account and want to use
+        it.
+    \item Clone the repository somewhere in your \mintinline{shell}{$FOAM_RUN}
+        directory (either the original repo or your fork).
+    \item Immediately make a branch! All your contribution should go in that
+        branch.
+    \item Write some code \textbf{and some tests} (your code must be thoroughly
+        tested), commit them to your branch. All your commits \textbf{must be
+        signed}! (Add )
+    \item When the time comes to submit your work for integration in the main
+        repo, make a pull request and send it to me.
+\end{enumerate}
+Let's see that in more detail.
+
+\subsubsection{Fork (optional) and clone}
+If you have a \GH account you can fork either version of \PF to get a copy on
+your account (there is a button for that).
+
+Next, on your computer you need to clone either the original repository or your
+copy of the repository
+\begin{minted}{shell}
+$ cd $FOAM_RUN
+$ git clone https://github.com/csoulain/porousMedia4Foam \
+    porousMedia4FoamLegacy
+\end{minted}
+(Here I cloned from Cyprien's original repo and put it in a directory called
+\texttt{porousMedia4FoamLegacy}.)
+\begin{minted}{shell}
+$ cd $FOAM_RUN
+$ git clone https://github.com/csoulain/porousMedia4Foam \
+    porousMedia4FoamLegacy
+\end{minted}
+
+\TODO what about v11legacy?
+
+\subsubsection{Make a branch, write code, commit}
+Make what is called a topic branch in which you will implement you feature, and
+switch to it.
+\begin{minted}{shell}
+$ git branch my_feature
+$ git switch my_feature
+\end{minted}
+Write code (and tests!) and commit them. Your commits must be signed. This means
+that you must have configured \GIT with your name and email address and use the
+\texttt{-s} option of the \mintinline{shell}{git commit} command.
+
+\subsubsection{Issue a pull request}
+
+\TODO
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction to \GIT}
+You should read the book \textquote{ProGit}
+(available online \url{https://git-scm.com/book/en/v2}), at least the chapters
+\textquote{Getting started}, \textquote{Git basics} and \textquote{Git
+basics}.
+
+I present here only the bare minimum you should know about \GIT.
+
+\subsection{First time configuration}
+As you are required to sign off your commits when contributing to \PF, git has
+to know your name and email address. This is done like so
+\begin{minted}{shell}
+$ git config --global user.name "Emmanuel Le Trong"
+$ git config --global user.email "emmanuel.le-trong@cnrs.fr"
+$ git config list
+\end{minted}
+The last command should show
+\begin{minted}[fontsize=\small]{text}
+user.name=Emmanuel LE TRONG
+user.email=emmanuel.le-trong@cnrs-orleans.fr
+\end{minted}
+Do this only once. 
+
+\subsection{Clone an existing repository}
+We have a sample project, you can clone it.
+\begin{minted}{shell}
+$ git clone https://github.com/calculisto/hello
+$ cd hello
+$ git status
+\end{minted}
+The last command should show
+\begin{minted}[fontsize=\small]{text}
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+\end{minted}
+which tells me
+\begin{itemize}
+    \item which branch I'm on
+    \item this branch is tracking a remote branch and is up to date with it
+    \item nothing has been changed yet
+\end{itemize}
+
+\subsection{Create a branch}
+New development should go in a dedicated branch.
+\begin{minted}{shell}
+$ git git switch -c new_feature
+$ git status
+\end{minted}
+The last command should show
+\begin{minted}[fontsize=\small]{text}
+On branch new_feature
+nothing to commit, working tree clean
+\end{minted}
+which tells me that I indeed switched to the branch \texttt{new\_feature}.
+
+\subsection{Contribute to the project}
+I add a new file \texttt{AUTHORS} and add a comment to the existing \texttt{hello.hpp} file
+\begin{minted}{shell}
+$ echo "Emmanuel LE TRONG" > AUTHORS
+$ vim hello.hpp
+$ git status
+\end{minted}
+The last command should show
+\begin{minted}[fontsize=\small]{text}
+On branch new_feature
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   hello.hpp
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	AUTHORS
+
+no changes added to commit (use "git add" and/or "git commit -a")
+\end{minted}
+which tells me that there is a modified file and a new (untracked) file.
+We will now register our changes in two commits, one introducing the comment and
+another the new file. The first one
+\begin{minted}{shell}
+$ git add hello.cpp
+$ git status
+\end{minted}
+The last command should show
+\begin{minted}[fontsize=\small]{text}
+On branch new_feature
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   hello.hpp
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	AUTHORS
+\end{minted}
+which tells me that the modified file is ready to be committed.
+Let's commit it
+\begin{minted}{shell}
+$ git commit -s -m "Add a comment to hello.cpp::say_hello"
+\end{minted}
+This shows
+\begin{minted}[fontsize=\small]{text}
+[new_feature e042a59] Add a comment to hello.cpp::say_hello
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+\end{minted}
+which tells me that a new commit has been created. Here I have used the
+\texttt{-m} option of \texttt{git commit} to provide a short commit message
+directly on the command line. I also have used the option \texttt{-s} to sign
+off my commit. The command
+\begin{minted}{shell}
+$ git show e042a59
+\end{minted}
+displays the full commit
+\begin{minted}[fontsize=\small]{text}
+commit e042a59268a750b9eff856f135f3854023dee9d2 (HEAD -> new_feature)
+Author: Emmanuel LE TRONG <emmanuel.le-trong@cnrs-orleans.fr>
+Date:   Wed Sep 24 16:09:20 2025 +0200
+
+    Add a comment to hello.cpp::say_hello
+
+    Signed-off-by: Emmanuel LE TRONG <emmanuel.le-trong@cnrs-orleans.fr>
+
+diff --git a/hello.hpp b/hello.hpp
+index 1241ffd..6729b19 100644
+--- a/hello.hpp
++++ b/hello.hpp
+@@ -1,9 +1,10 @@
+ #pragma once
+-#include <iostream>
++#include <string>
+
+     namespace
+ calculisto::sample_project
+ {
++// This function says hello
+     void
+ say_hello (std::string const& who = "world");
+ } // namespace calcul_isto::sample_project
+\end{minted}
+Notice the \texttt{Signed-off-by} line. In the diff you can see that not only
+did I add a comment but I also replaced an include directive in the file.
+
+Before doing the second commit, let's check the log
+\begin{minted}{shell}
+$ git log
+\end{minted}
+gives
+\begin{minted}[fontsize=\footnotesize]{text}
+commit e042a59268a750b9eff856f135f3854023dee9d2 (HEAD -> new_feature)
+Author: Emmanuel LE TRONG <emmanuel.le-trong@cnrs-orleans.fr>
+Date:   Wed Sep 24 16:09:20 2025 +0200
+
+    Add a comment to hello.cpp::say_hello
+
+    Signed-off-by: Emmanuel LE TRONG <emmanuel.le-trong@cnrs-orleans.fr>
+
+commit 00c3f8c0a0ef551910dc7bae0f8c95c2cee47611 (origin/main, origin/HEAD, main)
+Author: Emmanuel LE TRONG <emmanuel.le-trong@cnrs-orleans.fr>
+Date:   Wed Sep 24 10:52:28 2025 +0200
+
+    Add a README
+
+    Signed-off-by: Emmanuel LE TRONG <emmanuel.le-trong@cnrs-orleans.fr>
+
+commit b95e57c96edf0cf97eba4fe8ec47c603a4735a58
+Author: Emmanuel LE TRONG <emmanuel.le-trong@cnrs-orleans.fr>
+Date:   Wed Sep 24 10:40:42 2025 +0200
+
+    Initial Commit
+
+    Signed-off-by: Emmanuel LE TRONG <emmanuel.le-trong@cnrs-orleans.fr>
+\end{minted}
+This lists the commits and also tells me where the branches are pointing to. 
+
+Let's do the second commit
+\begin{minted}{shell}
+$ git add AUTHORS
+$ git commit -s -v
+\end{minted}
+I didn't use the \texttt{-s} option so \GIT opened an editor so I can type my
+commit message. The \texttt{-v} options shows the diff in the editor to remind
+me of what has changed.
+
+
+% \subsection{\OF history}
+% 
+% This is a controversial subject.
+% % https://www.cfd-online.com/Forums/openfoam/152605-original-openfoam-author-s.html
+% 
+% Various web resources
+% 
+% \begin{itemize}
+%     \item \textquote{Original OpenFOAM author(s)?} \url{https://www.cfd-online.com/Forums/openfoam/152605-original-openfoam-author-s.html}
+%     \item \textquote{Why OpenFOAM uses its own data structures and linear
+%         solvers?} \url{https://scicomp.stackexchange.com/q/35270}
+%     \item \textquote{Use C++11 move semantics for containers} \url{https://bugs.openfoam.org/view.php?id=3218}
+% \end{itemize}
+
+\end{document}

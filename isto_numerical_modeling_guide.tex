@@ -58,10 +58,13 @@
 \begin{document}
 \maketitle
 
+{\scriptsize This document is tracked here:
+\url{https://github.com/calculisto/isto_numerical_modeling_guide}}.
+
 \tableofcontents
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Using the \LaTeX{} typesetting system}
+\section{Regarding the \LaTeX{} typesetting system}
 
 You should write your papers using the \LaTeX system. 
 
@@ -85,6 +88,8 @@ Here is a list of packages that will simplify the production of quality material
     which is far easier to read.
     It automatically loads the \texttt{amsmath} package. 
     (Which you should always use anyway.)
+
+    \TODO \texttt{physics} considered harmful.
 
     \item \texttt{bm} (\url{https://ctan.org/pkg/bm}).
     To get symbols in boldface, in particular Greek letters. The
@@ -434,53 +439,55 @@ directories.)
 
 If you want to contribute the \PF here is a summary of the steps to follow
 \begin{enumerate}
-    \item Fork the project on \GH if you have have a \GH account and want to use
-        it.
+    \item You should have an account on \GH. From there, fork the project.
     \item Clone the repository somewhere in your \mintinline{shell}{$FOAM_RUN}
         directory (either the original repo or your fork).
     \item Immediately make a branch! All your contribution should go in that
         branch.
     \item Write some code \textbf{and some tests} (your code must be thoroughly
         tested), commit them to your branch. All your commits \textbf{must be
-        signed}! (Add )
+        signed}!
     \item When the time comes to submit your work for integration in the main
         repo, make a pull request and send it to me.
 \end{enumerate}
-Let's see that in more detail.
+Let's see that in more detail. (There are even more details in the \GIT section
+of this document.)
 
-\subsubsection{Fork (optional) and clone}
-If you have a \GH account you can fork either version of \PF to get a copy on
-your account (there is a button for that).
-
-Next, on your computer you need to clone either the original repository or your
-copy of the repository
+\subsubsection{Fork and clone}
+On \GH, go to the home page of the repository you want to clone and fork it,
+there is a button for that. A fork is necessary to ba able to make a pull
+request later. On your computer change directory to your \OF
+working directory and clone your fork of the repository.
 \begin{minted}{shell}
 $ cd $FOAM_RUN
-$ git clone https://github.com/csoulain/porousMedia4Foam \
+$ git clone https://github.com/<your_username>/porousMedia4Foam \
     porousMedia4FoamLegacy
 \end{minted}
-(Here I cloned from Cyprien's original repo and put it in a directory called
-\texttt{porousMedia4FoamLegacy}.)
-\begin{minted}{shell}
-$ cd $FOAM_RUN
-$ git clone https://github.com/csoulain/porousMedia4Foam \
-    porousMedia4FoamLegacy
-\end{minted}
+(Here I cloned into a new directory called \texttt{porousMedia4FoamLegacy}.)
 
-\TODO what about v11legacy?
+\TODO what about the \texttt{v11legacy} branch?
 
 \subsubsection{Make a branch, write code, commit}
-Make what is called a topic branch in which you will implement you feature, and
-switch to it.
+Make what is called a topic branch in which you will implement your new feature, 
+and switch to it. All your contributions must be done in a new branch, this
+makes the life of everybody simpler.
 \begin{minted}{shell}
 $ git branch my_feature
 $ git switch my_feature
 \end{minted}
 Write code (and tests!) and commit them. Your commits must be signed. This means
 that you must have configured \GIT with your name and email address and use the
-\texttt{-s} option of the \mintinline{shell}{git commit} command.
+\texttt{-s} option of the \mintinline{shell}{git commit} command (see the \GIT
+section). 
 
 \subsubsection{Issue a pull request}
+When you are ready to share your contribution with the world, you need to create
+a pull request and submit it to the maintainer of \PF.
+Push your branch to your repository
+\begin{minted}{shell}
+$ git push -u my_feature
+\end{minted}
+and make a pull request as explained in the \GIT section.
 
 \TODO
 
@@ -510,10 +517,12 @@ user.email=emmanuel.le-trong@cnrs-orleans.fr
 \end{minted}
 Do this only once. 
 
-\subsection{Clone an existing repository}
-We have a sample project, you can clone it.
+\subsection{Fork and clone}
+We have a sample project, you can fork it (this is done on \GH web site, there
+is a button for that). After the fork, you should have yous own copy of the
+repository in your account. Clone it
 \begin{minted}{shell}
-$ git clone https://github.com/calculisto/hello
+$ git clone https://github.com/<yous_username>/hello
 $ cd hello
 $ git status
 \end{minted}
@@ -569,7 +578,7 @@ which tells me that there is a modified file and a new (untracked) file.
 We will now register our changes in two commits, one introducing the comment and
 another the new file. The first one
 \begin{minted}{shell}
-$ git add hello.cpp
+$ git add hello.hpp
 $ git status
 \end{minted}
 The last command should show
@@ -670,20 +679,44 @@ $ git commit -s -v
 I didn't use the \texttt{-s} option so \GIT opened an editor so I can type my
 commit message. The \texttt{-v} options shows the diff in the editor to remind
 me of what has changed.
+The working tree is now clean
+\begin{minted}{shell}
+$ git status
+\end{minted}
+gives
+\begin{minted}[fontsize=\footnotesize]{text}
+On branch new_feature
+nothing to commit, working tree clean
+\end{minted}
+Let's say that I am now ready to share my work.
 
+\subsection{Publish your contribution}
 
-% \subsection{\OF history}
-% 
-% This is a controversial subject.
-% % https://www.cfd-online.com/Forums/openfoam/152605-original-openfoam-author-s.html
-% 
-% Various web resources
-% 
-% \begin{itemize}
-%     \item \textquote{Original OpenFOAM author(s)?} \url{https://www.cfd-online.com/Forums/openfoam/152605-original-openfoam-author-s.html}
-%     \item \textquote{Why OpenFOAM uses its own data structures and linear
-%         solvers?} \url{https://scicomp.stackexchange.com/q/35270}
-%     \item \textquote{Use C++11 move semantics for containers} \url{https://bugs.openfoam.org/view.php?id=3218}
-% \end{itemize}
+First I push my new branch to my repository
+\begin{minted}{shell}
+$ git push -u origin new_feature
+\end{minted}
+gives 
+\begin{minted}[fontsize=\footnotesize]{text}
+Enumerating objects: 8, done.
+Counting objects: 100% (8/8), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (6/6), 763 bytes | 381.00 KiB/s, done.
+Total 6 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (1/1), done.
+remote:
+remote: Create a pull request for 'new_feature' on GitHub by visiting:
+remote:      https://github.com/le-migou/hello_fork/pull/new/new_feature
+remote:
+To https://github.com/le-migou/hello_fork
+ * [new branch]      new_feature -> new_feature
+branch 'new_feature' set up to track 'origin/new_feature'.
+\end{minted}
+We are going to use \GH pull request feature which is slightly simpler than
+\GIT's. Go to your fork's home page, there should be a big green button labelled
+\textquote{Compare \& pull request}. Click it and you should be able to give
+your pull request a title and a description before creating it. The maintainer
+of the project will now be able to merge (accept) your contribution or not.
 
 \end{document}
